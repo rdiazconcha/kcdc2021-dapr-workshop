@@ -19,7 +19,8 @@ namespace DaprHospital.Person.Api
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+            services.AddControllers()
+                    .AddDapr();
             services.AddPersonDb(Configuration);
             services.AddSwaggerGen(c =>
             {

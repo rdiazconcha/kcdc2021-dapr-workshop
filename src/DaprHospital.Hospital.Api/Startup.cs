@@ -20,7 +20,8 @@ namespace DaprHospital.Hospital.Api
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddHospitalDb(Configuration);
-            services.AddControllers();
+            services.AddControllers()
+                    .AddDapr();
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "DaprHospital.Hospital.Api", Version = "v1" });
@@ -40,10 +41,10 @@ namespace DaprHospital.Hospital.Api
 
             app.UseAuthorization();
             app.EnsureHospitalDbIsCreated();
-            
+            app.UseCloudEvents();
             app.UseEndpoints(endpoints =>
             {
-                
+                endpoints.MapSubscribeHandler();
                 endpoints.MapControllers();
             });
         }
