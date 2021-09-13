@@ -1,0 +1,18 @@
+# tye application configuration file
+# read all about it at https://github.com/dotnet/tye
+#
+# when you've given us a try, we'd love to know what you think:
+#    https://aka.ms/AA7q20u
+#
+name: daprhospital
+extensions:
+  - name: dapr
+services:
+- name: hospital
+  project: DaprHospital.Hospital.Api/DaprHospital.Hospital.Api.csproj
+- name: patient
+  project: DaprHospital.Patient.Api/DaprHospital.Patient.Api.csproj
+- name: person
+  project: DaprHospital.Person.Api/DaprHospital.Person.Api.csproj
+- name: patientquery
+  project: DaprHospital.PatientQuery.Api/DaprHospital.PatientQuery.Api.csproj
