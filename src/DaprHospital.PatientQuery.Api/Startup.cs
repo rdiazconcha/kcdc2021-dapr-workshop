@@ -18,7 +18,8 @@ namespace DaprHospital.PatientQuery.Api
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+            services.AddControllers()
+                    .AddDapr();
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "DaprHospital.PatientQuery.Api", Version = "v1" });

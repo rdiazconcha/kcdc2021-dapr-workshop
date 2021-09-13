@@ -80,5 +80,13 @@ namespace DaprHospital.Patient.Api.Controllers
 
             return Ok();
         }
+
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAll()
+        {
+            var all = await dbContext.Patients.ToListAsync();
+            var result = all.Select(p => new PatientModel(p.Id, p.BloodType, Enum.GetName(typeof(PatientStatus), p.Status)));
+            return Ok(result);
+        }
     }
 }

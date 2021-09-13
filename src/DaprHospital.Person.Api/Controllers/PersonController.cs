@@ -3,8 +3,11 @@ using DaprHospital.IntegrationEvents;
 using DaprHospital.Person.Api.Domain.Commands;
 using DaprHospital.Person.Api.Domain.ValueObjects;
 using DaprHospital.Person.Api.Infrastructure;
+using DaprHospital.Person.Api.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace DaprHospital.Person.Api.Controllers
@@ -29,6 +32,15 @@ namespace DaprHospital.Person.Api.Controllers
         {
             var person = await CreatePersonAndPublishEventAsync(command);
             return Ok(person.Id);
+        }
+
+
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAll()
+        {
+            var all = await dbContext.People.ToListAsync();
+            var result = all.Select(p => new PersonModel(p.Id, p.Name.FullName));
+            return Ok(result);
         }
 
         private async Task<Domain.Entities.Person> CreatePersonAndPublishEventAsync(CreatePersonCommand command)
