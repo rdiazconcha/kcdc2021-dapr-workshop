@@ -1,6 +1,7 @@
 ﻿using Dapr.Client;
 using DaprHospital.PatientQuery.Api.Models;
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -22,7 +23,27 @@ namespace DaprHospital.PatientQuery.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var result = await QueryPatients();
+            var lastQuery = await daprClient.GetStateEntryAsync<StateModel>("statestore", "lastquery");
+            if (lastQuery.Value != null && DateTime.UtcNow <= lastQuery.Value.LastQuery.AddSeconds(30))
+            {
+                return Ok(lastQuery.Value.Data);
+            }
+
+            IEnumerable<QueryModel> result;
+            result = await QueryPatients();
+
+            bool saved = false;
+            while (!saved)
+            {
+                result = await QueryPatients();
+                lastQuery.Value = new StateModel()
+                {
+                    LastQuery = DateTime.UtcNow,
+                    Data = result
+                };
+                saved = await lastQuery.TrySaveAsync();
+            }
+
             return Ok(result);
         }
 
