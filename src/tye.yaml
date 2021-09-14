@@ -7,6 +7,7 @@
 name: daprhospital
 extensions:
   - name: dapr
+    components-path: components
 services:
 - name: hospital
   project: DaprHospital.Hospital.Api/DaprHospital.Hospital.Api.csproj
