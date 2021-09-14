@@ -1,0 +1,16 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: azurequeueoutput
+spec:
+  type: bindings.azure.storagequeues
+  version: v1
+  metadata:
+  - name: storageAccount
+    value: "<YOUR STORAGE ACCOUNT>"
+  - name: storageAccessKey
+    value: "<YOUR STORAGE ACCOUNT ACCESS KEY>"
+  - name: queue
+    value: "proceduresqueue"
+  - name: ttlInSeconds
+    value: "60"

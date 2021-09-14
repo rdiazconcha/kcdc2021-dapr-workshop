@@ -7,6 +7,9 @@ using DaprHospital.Person.Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -34,6 +37,13 @@ namespace DaprHospital.Person.Api.Controllers
             return Ok(person.Id);
         }
 
+        [HttpPost("/azurequeueinput")]
+        public async Task<IActionResult> OnInputBinding()
+        {
+            var command = await GetCommandFromRequestAsync();
+            var person = await CreatePersonAndPublishEventAsync(command);
+            return Ok(person.Id);
+        }
 
         [HttpGet("all")]
         public async Task<IActionResult> GetAll()
@@ -54,6 +64,16 @@ namespace DaprHospital.Person.Api.Controllers
             logger?.LogInformation($"Sending message: {personCreated}");
             await daprClient.PublishEventAsync("pubsub", "person-topic", personCreated);
             return person;
+        }
+
+        private async Task<CreatePersonCommand> GetCommandFromRequestAsync()
+        {
+            using var streamReader = new StreamReader(Request.Body);
+            var body = await streamReader.ReadToEndAsync();
+            var bytes = Convert.FromBase64String(body);
+            var decodedString = System.Text.Encoding.UTF8.GetString(bytes);
+            var command = JsonConvert.DeserializeObject<CreatePersonCommand>(decodedString);
+            return command;
         }
     }
 }
