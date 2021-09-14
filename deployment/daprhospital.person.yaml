@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: person
+  namespace: default
+  labels:
+    app: person
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: person
+  template:
+    metadata:
+      labels:
+        app: person
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "person"
+        dapr.io/app-port: "80"
+        dapr.io/log-level: "info"
+        dapr.io/sidecar-liveness-probe-period-seconds: "10"
+        dapr.io/sidecar-readiness-probe-period-seconds: "10"
+    spec:
+      containers:
+      - name: person
+        image: <YOUR IMAGE>
+        ports:
+        - containerPort: 80
+        imagePullPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: person
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+  selector:
+    app: person

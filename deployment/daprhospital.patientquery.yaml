@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: patientquery
+  namespace: default
+  labels:
+    app: patientquery
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: patientquery
+  template:
+    metadata:
+      labels:
+        app: patientquery
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "patientquery"
+        dapr.io/app-port: "80"
+        dapr.io/log-level: "info"
+        dapr.io/sidecar-liveness-probe-period-seconds: "20"
+        dapr.io/sidecar-readiness-probe-period-seconds: "20"
+    spec:
+      containers:
+      - name: patientquery
+        image: <YOUR IMAGE>
+        ports:
+        - containerPort: 80
+        imagePullPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: patientquery
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+  selector:
+    app: patientquery
