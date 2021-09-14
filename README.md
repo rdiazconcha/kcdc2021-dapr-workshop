@@ -1,1 +1,2 @@
-# kcdc2021-dapr-workshop
+# KCDC 2021
+Build powerful distributed applications with Dapr and .NET
