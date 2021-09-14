@@ -1,0 +1,16 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: azurequeueinput
+spec:
+  type: bindings.azure.storagequeues
+  version: v1
+  metadata:
+  - name: storageAccount
+    value: "daprhospital"
+  - name: storageAccessKey
+    value: "uEucL9VXWfzn4vz9A78j2j7J1HbEf+2SiJiZo+CNh71oQPt3bA27+bkGyj0v/6Se6bTKQ2Ipke9kSA3728bqPw=="
+  - name: queue
+    value: "peoplequeue"
+  - name: ttlInSeconds
+    value: "60"
