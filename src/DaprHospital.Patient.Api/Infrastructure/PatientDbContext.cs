@@ -3,38 +3,37 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace DaprHospital.Patient.Api.Infrastructure
-{
-    public class PatientDbContext : DbContext
-    {
-        public DbSet<Domain.Entities.Patient> Patients { get; set; }
-        public PatientDbContext(DbContextOptions<PatientDbContext> options) : base(options)
-        {
-        }
+namespace DaprHospital.Patient.Api.Infrastructure;
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            base.OnModelCreating(modelBuilder);
-            modelBuilder.Entity<Domain.Entities.Patient>().HasKey(x => x.Id);
-            modelBuilder.Entity<Domain.Entities.Patient>().OwnsOne(x => x.BloodType);
-        }
+public class PatientDbContext : DbContext
+{
+    public DbSet<Domain.Entities.Patient> Patients { get; set; }
+    public PatientDbContext(DbContextOptions<PatientDbContext> options) : base(options)
+    {
     }
 
-    public static class PatientDbContextExtensions
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        public static void AddPatientDb(this IServiceCollection services, IConfiguration configuration)
+        base.OnModelCreating(modelBuilder);
+        modelBuilder.Entity<Domain.Entities.Patient>().HasKey(x => x.Id);
+        modelBuilder.Entity<Domain.Entities.Patient>().OwnsOne(x => x.BloodType);
+    }
+}
+
+public static class PatientDbContextExtensions
+{
+    public static void AddPatientDb(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddDbContext<PatientDbContext>(options =>
         {
-            services.AddDbContext<PatientDbContext>(options =>
-            {
-                options.UseSqlServer(configuration.GetConnectionString("Patient"));
-            });
-        }
-        public static void EnsurePatientDbIsCreated(this IApplicationBuilder app)
-        {
-            using var scope = app.ApplicationServices.CreateScope();
-            var context = scope.ServiceProvider.GetService<PatientDbContext>();
-            context.Database.EnsureCreated();
-            context.Database.CloseConnection();
-        }
+            options.UseSqlServer(configuration.GetConnectionString("Patient"));
+        });
+    }
+    public static void EnsurePatientDbIsCreated(this IApplicationBuilder app)
+    {
+        using var scope = app.ApplicationServices.CreateScope();
+        var context = scope.ServiceProvider.GetService<PatientDbContext>();
+        context.Database.EnsureCreated();
+        context.Database.CloseConnection();
     }
 }

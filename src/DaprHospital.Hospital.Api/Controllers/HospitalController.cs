@@ -7,41 +7,40 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 
-namespace DaprHospital.Hospital.Api.Controllers
+namespace DaprHospital.Hospital.Api.Controllers;
+
+[ApiController]
+[Route("[controller]")]
+public class HospitalController : ControllerBase
 {
-    [ApiController]
-    [Route("[controller]")]
-    public class HospitalController : ControllerBase
+    private readonly ILogger<HospitalController> logger;
+    private readonly HospitalDbContext dbContext;
+    private readonly DaprClient daprClient;
+
+    public HospitalController(ILogger<HospitalController> logger, HospitalDbContext dbContext, DaprClient daprClient)
     {
-        private readonly ILogger<HospitalController> logger;
-        private readonly HospitalDbContext dbContext;
-        private readonly DaprClient daprClient;
+        this.logger = logger;
+        this.dbContext = dbContext;
+        this.daprClient = daprClient;
+    }
 
-        public HospitalController(ILogger<HospitalController> logger, HospitalDbContext dbContext, DaprClient daprClient)
+    [HttpPost("procedure")]
+    public async Task<IActionResult> AddProcedure(AddProcedureCommand command)
+    {
+        var inpatientToAddProcedure = await dbContext.Inpatients.Include(p => p.Procedures).FirstAsync(i => i.Id == command.PatientId);
+        if (inpatientToAddProcedure == null)
         {
-            this.logger = logger;
-            this.dbContext = dbContext;
-            this.daprClient = daprClient;
+            return NotFound();
         }
+        var newProcedure = new Procedure(command.ProcedureName);
+        inpatientToAddProcedure.AddProcedure(newProcedure);
+        dbContext.Inpatients.Update(inpatientToAddProcedure);
+        var message = $"Adding procedure {command.ProcedureName} to patient with Id: {command.PatientId}";
+        logger?.LogInformation(message);
+        await dbContext.SaveChangesAsync();
 
-        [HttpPost("procedure")]
-        public async Task<IActionResult> AddProcedure(AddProcedureCommand command)
-        {
-            var inpatientToAddProcedure = await dbContext.Inpatients.Include(p => p.Procedures).FirstAsync(i => i.Id == command.PatientId);
-            if (inpatientToAddProcedure == null)
-            {
-                return NotFound();
-            }
-            var newProcedure = new Procedure(command.ProcedureName);
-            inpatientToAddProcedure.AddProcedure(newProcedure);
-            dbContext.Inpatients.Update(inpatientToAddProcedure);
-            var message = $"Adding procedure {command.ProcedureName} to patient with Id: {command.PatientId}";
-            logger?.LogInformation(message);
-            await dbContext.SaveChangesAsync();
+        await daprClient.InvokeBindingAsync("azurequeueoutput", "create", message);
 
-            await daprClient.InvokeBindingAsync("azurequeueoutput", "create", message);
-
-            return Ok();
-        }
+        return Ok();
     }
 }
