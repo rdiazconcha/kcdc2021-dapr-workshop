@@ -7,54 +7,53 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace DaprHospital.PatientQuery.Api.Controllers
+namespace DaprHospital.PatientQuery.Api.Controllers;
+
+[ApiController]
+[Route("[controller]")]
+public class PatientQueryController : ControllerBase
 {
-    [ApiController]
-    [Route("[controller]")]
-    public class PatientQueryController : ControllerBase
+    private readonly DaprClient daprClient;
+
+    public PatientQueryController(DaprClient daprClient)
     {
-        private readonly DaprClient daprClient;
+        this.daprClient = daprClient;
+    }
 
-        public PatientQueryController(DaprClient daprClient)
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
+    {
+        var lastQuery = await daprClient.GetStateEntryAsync<StateModel>("statestore", "lastquery");
+        if (lastQuery.Value != null && DateTime.UtcNow <= lastQuery.Value.LastQuery.AddSeconds(30))
         {
-            this.daprClient = daprClient;
+            return Ok(lastQuery.Value.Data);
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
-        {
-            var lastQuery = await daprClient.GetStateEntryAsync<StateModel>("statestore", "lastquery");
-            if (lastQuery.Value != null && DateTime.UtcNow <= lastQuery.Value.LastQuery.AddSeconds(30))
-            {
-                return Ok(lastQuery.Value.Data);
-            }
+        IEnumerable<QueryModel> result;
+        result = await QueryPatients();
 
-            IEnumerable<QueryModel> result;
+        bool saved = false;
+        while (!saved)
+        {
             result = await QueryPatients();
-
-            bool saved = false;
-            while (!saved)
+            lastQuery.Value = new StateModel()
             {
-                result = await QueryPatients();
-                lastQuery.Value = new StateModel()
-                {
-                    LastQuery = DateTime.UtcNow,
-                    Data = result
-                };
-                saved = await lastQuery.TrySaveAsync();
-            }
-
-            return Ok(result);
+                LastQuery = DateTime.UtcNow,
+                Data = result
+            };
+            saved = await lastQuery.TrySaveAsync();
         }
 
-        private async Task<IEnumerable<QueryModel>> QueryPatients()
-        {
-            var patients = await daprClient.InvokeMethodAsync<IEnumerable<PatientModel>>(HttpMethod.Get, "patient", "patient/all");
-            var people = await daprClient.InvokeMethodAsync<IEnumerable<PersonModel>>(HttpMethod.Get, "person", "person/all");
-            var result = from patient in patients
-                         join person in people on patient.Id equals person.Id
-                         select new QueryModel(patient.Id, person.FullName, patient.BloodType, patient.Status);
-            return result;
-        }
+        return Ok(result);
+    }
+
+    private async Task<IEnumerable<QueryModel>> QueryPatients()
+    {
+        var patients = await daprClient.InvokeMethodAsync<IEnumerable<PatientModel>>(HttpMethod.Get, "patient", "patient/all");
+        var people = await daprClient.InvokeMethodAsync<IEnumerable<PersonModel>>(HttpMethod.Get, "person", "person/all");
+        var result = from patient in patients
+                     join person in people on patient.Id equals person.Id
+                     select new QueryModel(patient.Id, person.FullName, patient.BloodType, patient.Status);
+        return result;
     }
 }

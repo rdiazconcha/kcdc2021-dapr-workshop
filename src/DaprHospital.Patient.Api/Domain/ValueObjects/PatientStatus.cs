@@ -1,9 +1,8 @@
-﻿namespace DaprHospital.Patient.Api.Domain.ValueObjects
+﻿namespace DaprHospital.Patient.Api.Domain.ValueObjects;
+
+public enum PatientStatus
 {
-    public enum PatientStatus
-    {
-        None,
-        Admitted,
-        Discharged
-    }
+    None,
+    Admitted,
+    Discharged
 }
