@@ -1,6 +1,5 @@
-﻿namespace DaprHospital.Core
+﻿namespace DaprHospital.Core;
+
+public interface IDomainEvent
 {
-    public interface IDomainEvent
-    {
-    }
 }
